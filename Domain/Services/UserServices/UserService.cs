@@ -27,6 +27,11 @@ namespace Domain.Services.UserServices
 
         public List<User> GetAllUsers(int? pagina = 1, int? quantidade = 10)
         {
+            if (pagina == null)
+                pagina = 1;
+            if (quantidade == null)
+                quantidade = 10;
+
             var query = _context.Users.AsQueryable();
             query = query.Skip(((int)pagina - 1) * (int)quantidade).Take((int)quantidade);
 
@@ -45,6 +50,11 @@ namespace Domain.Services.UserServices
 
         public List<User> GetUsersByRole(Role role, int? pagina = 1, int? quantidade = 10)
         {
+            if (pagina == null)
+                pagina = 1;
+            if (quantidade == null)
+                quantidade = 10;
+
             var query = _context.Users.AsQueryable();
             query = query.Where(x => x.Role == role);
 
