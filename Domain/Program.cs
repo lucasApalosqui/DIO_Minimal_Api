@@ -63,7 +63,7 @@ app.UseEndpoints(endpoints =>
 
     }).WithTags("Users");
 
-    endpoints.MapPut("/user/{id}", ([FromRoute]string id ,[FromBody] UpdateUserDto updateUserDto, IUserService userService) =>
+    endpoints.MapPut("/user/{id}", ([FromRoute] string id, [FromBody] UpdateUserDto updateUserDto, IUserService userService) =>
     {
         try
         {
@@ -72,6 +72,9 @@ app.UseEndpoints(endpoints =>
 
             if (user == null)
                 return Results.NotFound(new ResultViewModel<SuccessfulCreateViewModel>("User not found"));
+
+            user.Email = updateUserDto.Email;
+            user.Role = updateUserDto.role;
 
             userService.UpdateUser(user);
             var response = new SuccessfulCreateViewModel
@@ -115,7 +118,7 @@ app.UseEndpoints(endpoints =>
         }
     }).WithTags("Users");
 
-    endpoints.MapDelete("user/{id}", ([FromRoute]string id, IUserService userService) =>
+    endpoints.MapDelete("user/{id}", ([FromRoute] string id, IUserService userService) =>
     {
         try
         {
@@ -134,7 +137,7 @@ app.UseEndpoints(endpoints =>
         }
     }).WithTags("Users");
 
-    endpoints.MapGet("user/GetAll", (IUserService userService, [FromQuery]int? pagina, [FromQuery]int? quantidade) =>
+    endpoints.MapGet("user/GetAll", (IUserService userService, [FromQuery] int? pagina, [FromQuery] int? quantidade) =>
     {
         try
         {
@@ -143,7 +146,7 @@ app.UseEndpoints(endpoints =>
                 return Results.NotFound(new ResultViewModel<List<SuccessfulCreateViewModel>>("Users Not found"));
 
             var response = new List<SuccessfulCreateViewModel>();
-            foreach(var user in userList)
+            foreach (var user in userList)
             {
                 response.Add(new SuccessfulCreateViewModel
                 {
@@ -155,7 +158,9 @@ app.UseEndpoints(endpoints =>
 
             return Results.Ok(new ResultViewModel<List<SuccessfulCreateViewModel>>(response));
 
-        }catch (Exception ex){
+        }
+        catch (Exception ex)
+        {
             return Results.StatusCode(500);
         }
     }).WithTags("Users");
@@ -186,7 +191,203 @@ app.UseEndpoints(endpoints =>
             return Results.StatusCode(500);
         }
     }).WithTags("Users");
+    #endregion
 
+    #region Games
+    endpoints.MapPost("game/", ([FromBody] GameDto gameDto, IGameService gameService) =>
+    {
+        try
+        {
+            var game = new Game(gameDto.Name, gameDto.plataform, gameDto.Ano);
+            gameService.CreateGame(game);
+
+            var response = new GetGameDto
+            {
+                Id = game.Id,
+                Name = game.Name,
+                Plataform = game.Plataform,
+                Ano = game.Ano
+            };
+
+            return Results.Created($"game/{game.Id}", response);
+        }
+        catch (Exception ex)
+        {
+            return Results.StatusCode(500);
+        }
+
+    }).WithTags("Games");
+
+    endpoints.MapPut("game/{id}", ([FromBody] GameDto gameDto, IGameService gameService,[FromRoute] string id) =>
+    {
+        try
+        {
+            var guidId = new Guid(id);
+            var game = gameService.GetById(guidId);
+
+            if (game == null)
+                return Results.NotFound(new ResultViewModel<GetGameDto>("Game not found"));
+
+            game.Plataform = gameDto.plataform;
+            game.Ano = gameDto.Ano;
+            game.Name = gameDto.Name;
+
+            gameService.UpdateGame(game);
+
+            var response = new GetGameDto
+            {
+                Id = game.Id,
+                Name = game.Name,
+                Plataform = game.Plataform,
+                Ano = game.Ano
+            };
+
+            return Results.Ok(new ResultViewModel<GetGameDto>(response));
+        }
+        catch (Exception ex)
+        {
+            return Results.StatusCode(500);
+        }
+
+    }).WithTags("Games");
+
+    endpoints.MapDelete("game/{id}", (IGameService gameService, [FromRoute] string id) =>
+    {
+        try
+        {
+            var guidId = new Guid(id);
+            var game = gameService.GetById(guidId);
+
+            if (game == null)
+                return Results.NotFound(new ResultViewModel<GetGameDto>("Game not found"));
+
+            gameService.DeleteGame(game);
+
+            return Results.NoContent();
+        }
+        catch (Exception ex)
+        {
+            return Results.StatusCode(500);
+        }
+
+    }).WithTags("Games");
+
+    endpoints.MapGet("game/{id}", (IGameService gameService, [FromRoute] string id) =>
+    {
+        try
+        {
+            var guidId = new Guid(id);
+            var game = gameService.GetById(guidId);
+
+            if (game == null)
+                return Results.NotFound(new ResultViewModel<GetGameDto>("Game not found"));
+
+            var response = new GetGameDto
+            {
+                Id = game.Id,
+                Name = game.Name,
+                Plataform = game.Plataform,
+                Ano = game.Ano
+            };
+
+            return Results.Ok(new ResultViewModel<GetGameDto>(response));
+        }
+        catch (Exception ex)
+        {
+            return Results.StatusCode(500);
+        }
+
+    }).WithTags("Games");
+
+    endpoints.MapGet("game/getAll", (IGameService gameService, [FromQuery] int? pagina, [FromQuery] int? quantidade) =>
+    {
+        try
+        {
+            var gameList = gameService.GetAll(pagina, quantidade);
+            if (gameList == null)
+                return Results.NotFound(new ResultViewModel<GetGameDto>("Game not found"));
+
+            var response = new List<GetGameDto>();
+
+            foreach(var game in gameList)
+            {
+                response.Add(new GetGameDto
+                {
+                    Id = game.Id,
+                    Name = game.Name,
+                    Plataform = game.Plataform,
+                    Ano = game.Ano
+                });
+            }
+
+            return Results.Ok(new ResultViewModel<List<GetGameDto>>(response));
+        }
+        catch (Exception ex)
+        {
+            return Results.StatusCode(500);
+        }
+
+    }).WithTags("Games");
+
+    endpoints.MapGet("game/getByPlatform", (IGameService gameService, [FromQuery] int? pagina, [FromQuery] int? quantidade, [FromQuery] string platform) =>
+    {
+        try
+        {
+            var gameList = gameService.GetByPlatform(platform, pagina, quantidade);
+            if (gameList == null)
+                return Results.NotFound(new ResultViewModel<GetGameDto>("Game not found"));
+
+            var response = new List<GetGameDto>();
+
+            foreach (var game in gameList)
+            {
+                response.Add(new GetGameDto
+                {
+                    Id = game.Id,
+                    Name = game.Name,
+                    Plataform = game.Plataform,
+                    Ano = game.Ano
+                });
+            }
+
+            return Results.Ok(new ResultViewModel<List<GetGameDto>>(response));
+        }
+        catch (Exception ex)
+        {
+            return Results.StatusCode(500);
+        }
+
+    }).WithTags("Games");
+
+    endpoints.MapGet("game/getByYear", (IGameService gameService, [FromQuery] int? pagina, [FromQuery] int? quantidade, [FromQuery] int year) =>
+    {
+        try
+        {
+            var gameList = gameService.GetByYear(year, pagina, quantidade);
+            if (gameList == null)
+                return Results.NotFound(new ResultViewModel<GetGameDto>("Game not found"));
+
+            var response = new List<GetGameDto>();
+
+            foreach (var game in gameList)
+            {
+                response.Add(new GetGameDto
+                {
+                    Id = game.Id,
+                    Name = game.Name,
+                    Plataform = game.Plataform,
+                    Ano = game.Ano
+                });
+            }
+
+            return Results.Ok(new ResultViewModel<List<GetGameDto>>(response));
+        }
+        catch (Exception ex)
+        {
+            return Results.StatusCode(500);
+        }
+
+    }).WithTags("Games");
 
     #endregion
 

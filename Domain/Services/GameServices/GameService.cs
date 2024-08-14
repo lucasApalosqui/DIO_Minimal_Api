@@ -26,6 +26,11 @@ namespace Domain.Services.GameServices
 
         public List<Game> GetAll(int? pagina = 1, int? quantidade = 10)
         {
+            if(pagina == null)
+                pagina = 1;
+            if(quantidade == null)
+                quantidade = 10;
+
             var query = _context.Games.AsQueryable();
 
             query = query.Skip(((int)pagina - 1) * (int)quantidade).Take((int)quantidade);
@@ -40,6 +45,11 @@ namespace Domain.Services.GameServices
 
         public List<Game> GetByPlatform(string platform, int? pagina = 1, int? quantidade = 10)
         {
+            if (pagina == null)
+                pagina = 1;
+            if (quantidade == null)
+                quantidade = 10;
+
             var query = _context.Games.AsQueryable();
             query = query.Where(x => x.Plataform.Contains(platform));
 
@@ -50,6 +60,11 @@ namespace Domain.Services.GameServices
 
         public List<Game> GetByYear(int year, int? pagina = 1, int? quantidade = 10)
         {
+            if (pagina == null)
+                pagina = 1;
+            if (quantidade == null)
+                quantidade = 10;
+
             var query = _context.Games.AsQueryable();
             query = query.Where(x => x.Ano == year);
 
